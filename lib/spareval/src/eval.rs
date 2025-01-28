@@ -6511,6 +6511,7 @@ pub struct Timer {
     start: DateTime,
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl Timer {
     pub fn now() -> Self {
         Self {
@@ -6520,6 +6521,19 @@ impl Timer {
 
     pub fn elapsed(&self) -> Option<DayTimeDuration> {
         DateTime::now().checked_sub(self.start)
+    }
+}
+
+#[cfg(target_family = "wasm")]
+impl Timer {
+    pub fn now() -> Self {
+        Self {
+            start: DateTime::MIN,
+        }
+    }
+
+    pub fn elapsed(&self) -> Option<DayTimeDuration> {
+        None // DateTime::now().checked_sub(self.start)
     }
 }
 
