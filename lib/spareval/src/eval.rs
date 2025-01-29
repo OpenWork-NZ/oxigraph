@@ -238,6 +238,7 @@ pub struct SimpleEvaluator<D: QueryableDataset> {
 }
 
 impl<D: QueryableDataset> SimpleEvaluator<D> {
+    #[cfg(not(target_family="wasm"))]
     pub fn new(
         dataset: D,
         base_iri: Option<Rc<Iri<String>>>,
@@ -251,6 +252,26 @@ impl<D: QueryableDataset> SimpleEvaluator<D> {
             },
             base_iri,
             now: DateTime::now(),
+            service_handler,
+            custom_functions,
+            run_stats,
+        }
+    }
+
+    #[cfg(target_family="wasm")]
+    pub fn new(
+        dataset: D,
+        base_iri: Option<Rc<Iri<String>>>,
+        service_handler: Rc<ServiceHandlerRegistry>,
+        custom_functions: Rc<CustomFunctionRegistry>,
+        run_stats: bool,
+    ) -> Self {
+        Self {
+            dataset: EvalDataset {
+                dataset: Rc::new(dataset),
+            },
+            base_iri,
+            now: DateTime::MIN,
             service_handler,
             custom_functions,
             run_stats,
@@ -6508,6 +6529,7 @@ fn format_list<T: ToString>(values: impl IntoIterator<Item = T>) -> String {
 }
 
 pub struct Timer {
+    #[cfg(not(target_family = "wasm"))]
     start: DateTime,
 }
 
@@ -6527,13 +6549,11 @@ impl Timer {
 #[cfg(target_family = "wasm")]
 impl Timer {
     pub fn now() -> Self {
-        Self {
-            start: DateTime::MIN,
-        }
+        Self {}
     }
 
     pub fn elapsed(&self) -> Option<DayTimeDuration> {
-        None // DateTime::now().checked_sub(self.start)
+        None
     }
 }
 
